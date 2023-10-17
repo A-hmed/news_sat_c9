@@ -3,6 +3,10 @@ import 'package:news_sat_c9/data/api_manager.dart';
 import 'package:news_sat_c9/data/model/category_dm.dart';
 import 'package:news_sat_c9/data/model/sources_response.dart';
 import 'package:news_sat_c9/ui/screens/home/tabs/news_tab/news_list.dart';
+import 'package:news_sat_c9/ui/screens/home/tabs/news_tab/news_tab_view_model.dart';
+import 'package:news_sat_c9/ui/widgets/error_view.dart';
+import 'package:news_sat_c9/ui/widgets/loading_widget.dart';
+import 'package:provider/provider.dart';
 
 class NewsTab extends StatefulWidget {
   final CategoryDM categoryDM;
@@ -14,20 +18,44 @@ class NewsTab extends StatefulWidget {
 
 class _NewsTabState extends State<NewsTab> {
   int currentTabIndex = 0;
+  NewsTabViewModel viewModel = NewsTabViewModel();
+
+  @override
+  void initState() {
+    super.initState();
+    viewModel.getSources(widget.categoryDM.id);
+  }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-        future: ApiManager.getSources(widget.categoryDM.id),
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            return buildTabs(snapshot.data!.sources!);
-          } else if (snapshot.hasError) {
-            return Text(snapshot.error.toString());
-          } else {
-            return Center(child: CircularProgressIndicator());
-          }
-        });
+
+    return ChangeNotifierProvider(
+        create: (_) => viewModel,
+        child: Consumer<NewsTabViewModel>(
+          builder: (context, viewModel, _){
+            Widget currentWidget;
+            if(viewModel.sources.isNotEmpty){
+              currentWidget = buildTabs(viewModel.sources);
+            }else if(viewModel.isLoading){
+              currentWidget = const LoadingWidget();
+            }else {
+              currentWidget = ErrorView(message: viewModel.errorText!);
+            }
+            return currentWidget;
+          },
+        ),
+    );
+    // return FutureBuilder(
+    //     future: ApiManager.getSources(widget.categoryDM.id),
+    //     builder: (context, snapshot) {
+    //       if (snapshot.hasData) {
+    //         return buildTabs(snapshot.data!.sources!);
+    //       } else if (snapshot.hasError) {
+    //         return Text(snapshot.error.toString());
+    //       } else {
+    //         return Center(child: CircularProgressIndicator());
+    //       }
+    //     });
   }
 
   Widget buildTabs(List<Source> sources) {
@@ -71,4 +99,5 @@ class _NewsTabState extends State<NewsTab> {
         style: TextStyle(
             fontSize: 18, color: isSelected ? Colors.white : Colors.blue),
       ));
+
 }

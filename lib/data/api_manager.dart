@@ -8,7 +8,7 @@ abstract class ApiManager{
   static const String baseUrl = "newsapi.org";
   static const String apiKey = "a2803275cc264f5ab82151862011361a";
 
- static Future<SourcesResponse> getSources(String categoryId) async {
+ static Future<List<Source>> getSources(String categoryId) async {
    try {
      Uri url = Uri.parse("https://$baseUrl/v2/top-headlines/sources?apiKey=$apiKey&&category=$categoryId");
      Response response = await get(url);
@@ -16,7 +16,7 @@ abstract class ApiManager{
      SourcesResponse sourcesResponse = SourcesResponse.fromJson(json);
      if(response.statusCode >= 200 &&
          response.statusCode < 300 && sourcesResponse.sources?.isNotEmpty == true){
-       return sourcesResponse;
+       return sourcesResponse.sources!;
      }
      throw Exception();
    }catch(_){
